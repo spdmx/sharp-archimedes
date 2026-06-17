@@ -5,8 +5,8 @@ import { PixelCard } from '@/components/PixelCard';
 
 export const dynamic = 'force-dynamic';
 
-export default function MatchesPage() {
-  const matches = getMatches();
+export default async function MatchesPage() {
+  const matches = await getMatches();
 
   return (
     <main className="container">

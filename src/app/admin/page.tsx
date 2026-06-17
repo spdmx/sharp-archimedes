@@ -22,7 +22,7 @@ export default async function AdminPage() {
     );
   }
 
-  const matches = getMatches();
+  const matches = await getMatches();
 
   return (
     <main className="container">

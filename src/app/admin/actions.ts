@@ -23,7 +23,7 @@ export async function saveResult(matchId: number, homeScore: number, awayScore: 
   const cookieStore = await cookies();
   if (cookieStore.get('admin')?.value !== 'true') throw new Error('Unauthorized');
   
-  updateMatchResult(matchId, homeScore, awayScore);
+  await updateMatchResult(matchId, homeScore, awayScore);
   revalidatePath('/');
   revalidatePath('/admin');
 }

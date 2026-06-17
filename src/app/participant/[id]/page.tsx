@@ -9,7 +9,7 @@ export default async function ParticipantPage({ params }: { params: Promise<{ id
   // In Next.js 15, params is a Promise that needs to be awaited
   const { id } = await params;
   const participantId = parseInt(id, 10);
-  const participant = getParticipantById(participantId);
+  const participant = await getParticipantById(participantId);
 
   if (!participant) {
     return (
@@ -24,7 +24,7 @@ export default async function ParticipantPage({ params }: { params: Promise<{ id
     );
   }
 
-  const predictions = getParticipantPredictionsWithMatches(participantId);
+  const predictions = await getParticipantPredictionsWithMatches(participantId);
 
   return (
     <main className="container">
