@@ -1,15 +1,28 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { createClient } from '@libsql/client/web';
 
 // Using a singleton pattern to ensure only one connection is open
-let db: Database.Database | null = null;
+let client: ReturnType<typeof createClient> | null = null;
 
-export function getDb() {
-  if (!db) {
-    const dbPath = path.join(process.cwd(), 'quiniela.db');
-    db = new Database(dbPath, { verbose: console.log });
+export function getClient() {
+  if (!client) {
+    const url = process.env.TURSO_DATABASE_URL;
+    const authToken = process.env.TURSO_AUTH_TOKEN;
+    
+    // In Vercel or production environment, we MUST use Turso cloud database
+    const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+    if (isVercel && !url) {
+      throw new Error(
+        'Critical Configuration Error: TURSO_DATABASE_URL environment variable is missing. ' +
+        'Local SQLite file database cannot be written to on Vercel (read-only filesystem).'
+      );
+    }
+    
+    client = createClient({ 
+      url: url || 'file:quiniela.db', 
+      authToken 
+    });
   }
-  return db;
+  return client;
 }
 
 export type Participant = {
@@ -35,20 +48,27 @@ export type Prediction = {
   away_score: number;
 };
 
-export function getParticipants(): Participant[] {
-  return getDb().prepare('SELECT * FROM participants').all() as Participant[];
+export async function getParticipants(): Promise<Participant[]> {
+  const rs = await getClient().execute('SELECT * FROM participants');
+  return rs.rows as unknown as Participant[];
 }
 
-export function getMatches(): Match[] {
-  return getDb().prepare('SELECT * FROM matches ORDER BY id ASC').all() as Match[];
+export async function getMatches(): Promise<Match[]> {
+  const rs = await getClient().execute('SELECT * FROM matches ORDER BY id ASC');
+  return rs.rows as unknown as Match[];
 }
 
-export function getPredictions(): Prediction[] {
-  return getDb().prepare('SELECT * FROM predictions').all() as Prediction[];
+export async function getPredictions(): Promise<Prediction[]> {
+  const rs = await getClient().execute('SELECT * FROM predictions');
+  return rs.rows as unknown as Prediction[];
 }
 
-export function getParticipantById(id: number): Participant | undefined {
-  return getDb().prepare('SELECT * FROM participants WHERE id = ?').get(id) as Participant | undefined;
+export async function getParticipantById(id: number): Promise<Participant | undefined> {
+  const rs = await getClient().execute({
+    sql: 'SELECT * FROM participants WHERE id = ?',
+    args: [id]
+  });
+  return rs.rows[0] as unknown as Participant | undefined;
 }
 
 export type PredictionWithMatch = Match & {
@@ -57,9 +77,13 @@ export type PredictionWithMatch = Match & {
   pointsEarned: number;
 };
 
-export function getParticipantPredictionsWithMatches(participantId: number): PredictionWithMatch[] {
-  const matches = getMatches();
-  const predictions = getDb().prepare('SELECT * FROM predictions WHERE participant_id = ?').all(participantId) as Prediction[];
+export async function getParticipantPredictionsWithMatches(participantId: number): Promise<PredictionWithMatch[]> {
+  const matches = await getMatches();
+  const rs = await getClient().execute({
+    sql: 'SELECT * FROM predictions WHERE participant_id = ?',
+    args: [participantId]
+  });
+  const predictions = rs.rows as unknown as Prediction[];
   
   return predictions.map(pred => {
     const match = matches.find(m => m.id === pred.match_id)!;
@@ -90,16 +114,18 @@ export function getParticipantPredictionsWithMatches(participantId: number): Pre
   });
 }
 
-export function updateMatchResult(matchId: number, homeScore: number, awayScore: number) {
-  const stmt = getDb().prepare('UPDATE matches SET home_score = ?, away_score = ?, status = ? WHERE id = ?');
-  stmt.run(homeScore, awayScore, 'FINISHED', matchId);
+export async function updateMatchResult(matchId: number, homeScore: number, awayScore: number) {
+  await getClient().execute({
+    sql: 'UPDATE matches SET home_score = ?, away_score = ?, status = ? WHERE id = ?',
+    args: [homeScore, awayScore, 'FINISHED', matchId]
+  });
 }
 
 // Logic for calculating points
-export function calculateLeaderboard() {
-  const participants = getParticipants();
-  const matches = getMatches().filter(m => m.status === 'FINISHED' && m.home_score !== null && m.away_score !== null);
-  const predictions = getPredictions();
+export async function calculateLeaderboard() {
+  const participants = await getParticipants();
+  const matches = (await getMatches()).filter(m => m.status === 'FINISHED' && m.home_score !== null && m.away_score !== null);
+  const predictions = await getPredictions();
 
   // Initialize leaderboard
   const leaderboard = participants.map(p => ({

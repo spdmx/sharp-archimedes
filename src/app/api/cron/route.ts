@@ -53,16 +53,21 @@ const TEAM_MAP: Record<string, string> = {
 };
 
 export async function GET(request: Request) {
-  // Simple auth via querystring for cron invocation
+  const authHeader = request.headers.get('authorization');
+  const expectedAuth = process.env.CRON_SECRET ? `Bearer ${process.env.CRON_SECRET}` : null;
   const { searchParams } = new URL(request.url);
-  const secret = searchParams.get('secret');
+  const querySecret = searchParams.get('secret');
+  const expectedQuery = process.env.CRON_SECRET || 'smcl_cron_secret';
   
-  if (secret !== (process.env.CRON_SECRET || 'smcl_cron_secret')) {
+  if (
+    !(expectedAuth && authHeader === expectedAuth) &&
+    querySecret !== expectedQuery
+  ) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const matches = getMatches().filter(m => m.status === 'PENDING');
+    const matches = (await getMatches()).filter(m => m.status === 'PENDING');
     if (matches.length === 0) {
       return NextResponse.json({ message: 'No pending matches to update' });
     }
@@ -96,7 +101,7 @@ export async function GET(request: Request) {
           const awayScore = apiMatch.score.fullTime.away;
           
           if (typeof homeScore === 'number' && typeof awayScore === 'number') {
-            updateMatchResult(pendingMatch.id, homeScore, awayScore);
+            await updateMatchResult(pendingMatch.id, homeScore, awayScore);
             updatedCount++;
           }
         }
