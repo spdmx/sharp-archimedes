@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root {
+  --blue-900: #001220;
+  --blue-800: #002240;
+  --blue-600: #005A9C;
+  --blue-400: #4A90E2;
+  --blue-200: #A3D8FF;
+  --blue-100: #E0F2FF;
+  --white: #FFFFFF;
+  --error: #FF4A4A;
+  --success: #4AFF4A;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Press Start 2P', cursive;
+  background-color: var(--blue-900);
+  color: var(--blue-100);
+  line-height: 1.5;
+  min-height: 100vh;
+  position: relative;
+  z-index: 0;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('/bg-sprites.png');
+  background-size: 300px;
+  background-repeat: repeat;
+  opacity: 0.08;
+  z-index: -1;
+  pointer-events: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: 1rem;
+  color: var(--blue-200);
+  text-shadow: 2px 2px 0 var(--blue-600);
+}
+
+a {
+  color: var(--blue-400);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--blue-200);
+}
+
+/* Pixel Border Utility */
+.pixel-border {
+  border: 4px solid var(--blue-600);
+  background-color: var(--blue-800);
+  padding: 1rem;
+  /* Instead of pure border, a box-shadow can give a better pixel look, but let's stick to simple thick borders for now */
+  box-shadow: 
+    inset -4px -4px 0px 0px rgba(0, 0, 0, 0.4),
+    inset 4px 4px 0px 0px rgba(255, 255, 255, 0.2);
+}
+
+.pixel-button {
+  font-family: 'Press Start 2P', cursive;
+  background-color: var(--blue-600);
+  color: var(--white);
+  border: 4px solid var(--blue-400);
+  padding: 0.8rem 1.5rem;
+  cursor: pointer;
+  box-shadow: 
+    inset -4px -4px 0px 0px rgba(0, 0, 0, 0.4),
+    inset 4px 4px 0px 0px rgba(255, 255, 255, 0.2);
+  transition: transform 0.1s;
+}
+
+.pixel-button:hover {
+  background-color: var(--blue-400);
+  border-color: var(--blue-200);
+}
+
+.pixel-button:active {
+  transform: translateY(4px);
+  box-shadow: 
+    inset 4px 4px 0px 0px rgba(0, 0, 0, 0.4),
+    inset -4px -4px 0px 0px rgba(255, 255, 255, 0.2);
+}
+
+.pixel-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--blue-800);
+  border: 4px solid var(--blue-600);
+}
+
+.pixel-table th, .pixel-table td {
+  padding: 0.8rem;
+  border: 2px solid var(--blue-600);
+  text-align: center;
+}
+
+.pixel-table th {
+  background-color: var(--blue-600);
+  color: var(--white);
+}
+
+.pixel-table tbody tr:nth-child(even) {
+  background-color: rgba(0, 90, 156, 0.2);
+}
+
+.pixel-table tbody tr:hover {
+  background-color: rgba(74, 144, 226, 0.3);
+}
+
+.pixel-input {
+  font-family: 'Press Start 2P', cursive;
+  background-color: var(--blue-900);
+  color: var(--white);
+  border: 4px solid var(--blue-600);
+  padding: 0.8rem;
+  width: 100%;
+}
+
+.pixel-input:focus {
+  outline: none;
+  border-color: var(--blue-400);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
