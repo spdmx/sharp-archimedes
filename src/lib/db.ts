@@ -1,4 +1,4 @@
-import { createClient } from '@libsql/client/web';
+import { createClient } from '@libsql/client';
 
 // Using a singleton pattern to ensure only one connection is open
 let client: ReturnType<typeof createClient> | null = null;
